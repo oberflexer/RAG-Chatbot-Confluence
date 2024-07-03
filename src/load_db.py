@@ -42,7 +42,7 @@ class DataLoader():
         # )
         base_url = 'https://mophyhuang.atlassian.net/wiki'
         space_key = 'KB'
-        api_token = 'ATATT3xFfGF0Eo4-PbBJLN-KnudQbsgOYiNsGz7-JVck1rWg-t46KOkdsYDBVvypOEPwPKJggFUmgzEi3j5yYEBu15kslnt3ErIKDdyYaH7Hhi_m6uBrGRU0QHIk2o28Ua4Ulct5USQp7KSvhKTF88hk7Z0f9MqtyMI8GAxCdU4ydKK71ux4a7M=C0AFB4E8'
+        api_token = 
         email = 'mophyhuang@gmail.com'
 
         loader = ConfluenceLoader(

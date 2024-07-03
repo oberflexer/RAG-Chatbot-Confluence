@@ -11,7 +11,7 @@ from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 from getpass import getpass
 import torch
 #HUGGINGFACEHUB_API_TOKEN = getpass()  # handle sensitive information as it hides the input when typing
-HUGGINGFACEHUB_API_TOKEN = "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"
+HUGGINGFACEHUB_API_TOKEN = 
 
 
 class HelpDesk():
