@@ -24,7 +24,7 @@
     -  the space_key: `https://yoursite.atlassian.com/wiki/spaces/<space_key>/pages/`
     -  the space_name: `<space_name>/spaces/<space_key>/pages/`
     -  the email adress you used for your Confluence space
-    -  the OpenAI API key
+    -  the OLLAMA and LLAM3 AI Model
 
 - To run the streamlit app run:
 ```
