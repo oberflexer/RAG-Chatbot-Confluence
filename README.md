@@ -3,7 +3,7 @@
 **Help desk** allows you to create a Question Answering bot with a streamlit UI using your company Confluence data.
 
 <p align="center">
-  <img src="./docs/help_desk.gif" alt="animated" />
+  <img src="./docs/chatbot_with_confluence.jpg" alt="Chatbot with Confluence"/>
 </p>
 
 # How to use
@@ -77,6 +77,6 @@ The process is the following:
   - Otherwise you cannot split text in a smart manner using the [MarkdownHeaderTextSplitter]('https://python.langchain.com/docs/modules/data_connection/document_transformers/text_splitters/markdown_header_metadata')
 - Load data
 - Markdown and RecursiveCharacterTextSplitter
-- LLM used: Open AI LLM and embedding
+- LLM used: Llam3 local
 - The QARetrievalChain
 - Streamlit as a data interface
