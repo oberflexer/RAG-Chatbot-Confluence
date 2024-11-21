@@ -1,5 +1,3 @@
-str# LLMs
-
 **Help desk** allows you to create a Question Answering bot with a streamlit UI using your company Confluence data.
 
 <p align="center">
@@ -21,23 +19,16 @@ str# LLMs
   - Create your own Conluence space with page informations
   - Create and feed your API key [here]('https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/')
   - Insert in the  `env` file:
+    -  the confluence_api_key
     -  the space_key: `https://yoursite.atlassian.com/wiki/spaces/<space_key>/pages/`
     -  the space_name: `<space_name>/spaces/<space_key>/pages/`
     -  the email adress you used for your Confluence space
-    -  the OLLAMA and LLAM3 AI Model
-
-- To run the streamlit app run:
-```
-cd src
-streamlit run streamlit.py
-```
-
-- To evaluate the quality of the RAG model:
-```
-# First replace the evaluation dataset file in the data folder with your topic questions
-cd src
-python evaluate.py
-```
+    -  the open_apikey
+    -  optionally the model of your llm_provider
+    -  the openai_endpoint
+    -  the huggingfacehub_api_token
+    -  the api_version
+    -  the llm_provider
 
 - To use and deep dive with the notebook
 ```
