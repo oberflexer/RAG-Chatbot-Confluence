@@ -11,98 +11,38 @@ from config import (CONFLUENCE_SPACE_NAME, CONFLUENCE_SPACE_KEY,
                     CONFLUENCE_USERNAME, CONFLUENCE_API_KEY, PERSIST_DIRECTORY)
 
 from langchain_community.document_loaders import ConfluenceLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.text_splitter import MarkdownHeaderTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter, MarkdownHeaderTextSplitter
+from langchain_community.vectorstores import Chroma
 
 class DataLoader():
-    """Create, load, save the DB using the confluence Loader"""
-    def __init__(
-        self,
-        confluence_url=CONFLUENCE_SPACE_NAME,
-        username=CONFLUENCE_USERNAME,
-        api_key=CONFLUENCE_API_KEY,
-        space_key=CONFLUENCE_SPACE_KEY,
-        persist_directory=PERSIST_DIRECTORY
-    ):
+    """Create, load, save the DB using the Confluence Loader"""
 
+    def __init__(
+            self,
+            embeddings,
+            confluence_url=CONFLUENCE_SPACE_NAME,
+            username=CONFLUENCE_USERNAME,
+            api_key=CONFLUENCE_API_KEY,
+            space_key=CONFLUENCE_SPACE_KEY,
+            persist_directory=PERSIST_DIRECTORY,
+            new_db=True
+    ):
         self.confluence_url = confluence_url
         self.username = username
         self.api_key = api_key
         self.space_key = space_key
         self.persist_directory = persist_directory
+        self.embeddings = embeddings
 
-    def load_from_confluence_loader(self):
-        """Load HTML files from Confluence"""
-        print(self.confluence_url,self.username,self.api_key, self.space_key)
-        # loader = ConfluenceLoader(
-        #     url=self.confluence_url,
-        #     username=self.username,
-        #     api_key=self.api_key,
-        #     space_key=self.space_key
-        # )
-        base_url = 'https://mophyhuang.atlassian.net/wiki'
-        space_key = 'KB'
-        api_token = 
-        email = 'mophyhuang@gmail.com'
+        # Initialize Chroma DB instance based on `new_db` flag
+        if new_db:
+            self.db = self.set_db(self.embeddings)
+        else:
+            self.db = Chroma(
+                persist_directory=self.persist_directory,
+                embedding_function=self.embeddings
+            )
 
-        loader = ConfluenceLoader(
-                    url=base_url,
-                    username=email,
-                    api_key=api_token,
-                    space_key = "KB"
-
-                )
-        docs = loader.load()
-            #  include_attachments=False,
-            #  limit=50,
-            #  max_pages=1000
-            
-        return docs
-
-    def split_docs(self, docs):
-        # Markdown
-        headers_to_split_on = [
-            ("#", "Titre 1"),
-            ("##", "Sous-titre 1"),
-            ("###", "Sous-titre 2"),
-        ]
-
-        markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
-
-        # Split based on markdown and add original metadata
-        md_docs = []
-        for doc in docs:
-            md_doc = markdown_splitter.split_text(doc.page_content)
-            for i in range(len(md_doc)):
-                md_doc[i].metadata = md_doc[i].metadata | doc.metadata
-            md_docs.extend(md_doc)
-
-        # RecursiveTextSplitter
-        # Chunk size big enough
-        splitter = RecursiveCharacterTextSplitter(
-            chunk_size=512,
-            chunk_overlap=20,
-            separators=["\n\n", "\n", "(?<=\. )", " ", ""]
-        )
-
-        splitted_docs = splitter.split_documents(md_docs)
-        return splitted_docs
-
-    def save_to_db(self, splitted_docs, embeddings):
-        """Save chunks to Chroma DB"""
-        from langchain_community.vectorstores import Chroma
-        db = Chroma.from_documents(splitted_docs, embeddings, persist_directory=self.persist_directory)
-        db.persist()
-        return db
-
-    def load_from_db(self, embeddings):
-        """Loader chunks to Chroma DB"""
-        from langchain.vectorstores import Chroma
-        db = Chroma(
-            persist_directory=self.persist_directory,
-            embedding_function=embeddings
-        )
-        return db
 
     def set_db(self, embeddings):
         """Create, save, and load db"""
@@ -122,13 +62,77 @@ class DataLoader():
 
         return db
 
+
+    def load_from_confluence_loader(self):
+        """Load HTML files from Confluence"""
+        loader = ConfluenceLoader(
+            url=self.confluence_url,
+            username=self.username,
+            api_key=self.api_key,
+            space_key=self.space_key
+        )
+        docs = loader.load()
+        print(f"Number of documents loaded from Confluence: {len(docs)}")
+        return docs
+
+
+
+    def split_docs(self, docs):
+        """Split documents with metadata preservation for enhanced granularity"""
+        # Define headers for markdown splitting
+        headers_to_split_on = [
+            ("#", "Title 1"),
+            ("##", "Subtitle 1"),
+            ("###", "Subtitle 2"),
+        ]
+        markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
+
+        # Split based on markdown and add original metadata
+        md_docs = []
+        for doc in docs:
+            md_doc = markdown_splitter.split_text(doc.page_content)
+            for i in range(len(md_doc)):
+                md_doc[i].metadata = md_doc[i].metadata | doc.metadata
+            md_docs.extend(md_doc)
+
+        # Recursive text splitter for further splitting
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000,
+            chunk_overlap=100,
+            separators=["\n\n", "\n", "(?<=\\. )", " ", ""]
+        )
+
+        # Split each markdown-based chunk into smaller text chunks if needed
+        splitted_docs = splitter.split_documents(md_docs)
+        print(f"Number of splitted documents loaded from Confluence: {len(splitted_docs)}")
+        return splitted_docs
+
+
+    def save_to_db(self, splitted_docs, embeddings):
+        """Save chunks to Chroma DB"""
+        from langchain_community.vectorstores import Chroma
+        # Annahme: self.embeddings ist eine Funktion oder Methode zur Erstellung von Embeddings
+
+        db = Chroma.from_documents(splitted_docs, embeddings, persist_directory=self.persist_directory)
+        db.persist()
+        return db
+
     def get_db(self, embeddings):
         """Create, save, and load db"""
         db = self.load_from_db(embeddings)
         return db
 
+    def load_from_db(self, embeddings):
+        """Loader chunks to Chroma DB"""
+        from langchain.vectorstores import Chroma
+        db = Chroma(
+            persist_directory=self.persist_directory,
+            embedding_function=embeddings
+        )
+        return db
+
 
 if __name__ == "__main__":
-    loader = DataLoader()
-    loader.load_from_confluence_loader()
-    # db = loader.set_db(embeddings)
+    # Example usage, assuming `embeddings` is defined elsewhere in your code
+    embeddings = ...  # Provide your embeddings instance
+    loader = DataLoader(embeddings, new_db=True)  # Set new_db=False if you want to load an existing DB

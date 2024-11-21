@@ -1,34 +1,44 @@
 import sys
+
+from dotenv import load_dotenv
+
+import os
+
+from langchain_community.llms.huggingface_hub import HuggingFaceHub
+
+load_dotenv()
+
+from openai import api_version, azure_endpoint
+
 import load_db
 import collections
 # from langchain.llms import OpenAI
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
-from langchain_community.llms import Ollama
+from langchain_openai import AzureChatOpenAI, OpenAI
+
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 # from langchain.embeddings import OpenAIEmbeddings
 from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 from getpass import getpass
 import torch
-#HUGGINGFACEHUB_API_TOKEN = getpass()  # handle sensitive information as it hides the input when typing
-HUGGINGFACEHUB_API_TOKEN = 
+
+
 
 
 class HelpDesk():
     """Create the necessary objects to create a QARetrieval chain"""
-    def __init__(self, new_db=True):
+    def __init__(self):
 
-        self.new_db = new_db
         self.template = self.get_template()
         self.embeddings = self.get_embeddings()
         self.llm = self.get_llm()
         self.prompt = self.get_prompt()
 
-        if self.new_db:
-            self.db = load_db.DataLoader().set_db(self.embeddings)
-        else:
-            self.db = load_db.DataLoader().get_db(self.embeddings)
+        """initialises db"""
+        self.db = load_db.DataLoader(embeddings=self.embeddings).get_db(embeddings=self.embeddings)
 
+        """Retriever for retrieving relevant information to the users questions"""
         self.retriever = self.db.as_retriever()
         self.retrieval_qa_chain = self.get_retrieval_qa()
 
@@ -56,14 +66,38 @@ class HelpDesk():
     def get_embeddings(self) -> HuggingFaceInferenceAPIEmbeddings:
         # embeddings = OpenAIEmbeddings()
         embeddings = HuggingFaceInferenceAPIEmbeddings(
-                api_key=HUGGINGFACEHUB_API_TOKEN, model_name="sentence-transformers/all-MiniLM-l6-v2")
+                api_key=os.getenv("HUGGINGFACEHUB_API_TOKEN"), model_name="sentence-transformers/all-MiniLM-l6-v2")
         return embeddings
 
     def get_llm(self):
-        # llm = OpenAI()
-        # llm = Ollama(model="llama3")
-        # Initialize the GPT-2 wrapper
-        llm = Ollama(model="llama3")
+
+        #getting the LLM Data from .env
+        endpoint = os.getenv("OPENAI_ENDPOINT")
+        api_key = os.getenv("OPENAI_APIKEY")
+        api_version = os.getenv("API_VERSION")
+        model_name = os.getenv("MODEL")
+        provider = os.getenv("LLM_PROVIDER")
+
+        if provider == "azure":
+            llm = AzureChatOpenAI(
+                openai_api_key=api_key,
+                api_version=api_version,
+                azure_endpoint=endpoint,
+                model_name=model_name
+            )
+        elif provider == "openai":
+            llm = OpenAI(
+                openai_api_key=api_key,
+                model=model_name
+            )
+        elif provider == "huggingface":
+            llm = HuggingFaceHub(
+                model_name=model_name,
+                api_key=api_key
+            )
+        else:
+            raise ValueError("Unsupported LLM provider. Please check your environment configuration. Allowed: azure, openai or huggingface!")
+
         return llm
 
     def get_retrieval_qa(self):

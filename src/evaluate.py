@@ -67,7 +67,7 @@ def run():
 
 if __name__ == '__main__':
     load_dotenv(find_dotenv())
-    model = HelpDesk(new_db=True)
+    model = HelpDesk()
     dataset = open_evaluation_dataset(EVALUATION_DATASET)
     evaluate_dataset(model, dataset)
 
