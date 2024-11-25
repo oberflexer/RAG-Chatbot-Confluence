@@ -6,10 +6,12 @@
 
 # How to use
 
+- python 3.10.x needed
 - Create a virtual environnement:
-    - `python3.10 -m venv .venv`
-    - `source .venv/bin/activate`
-    - `pip install -r requirements.txt`
+    - `python -m venv .venv` || `python3 -m venv .venv`
+    -  Linux: `source .venv/bin/activate` || Windows: `.venv\Scripts\Activate`
+    -  Linux: `pip freeze | xargs pip uninstall -y` || Windows: `pip freeze | ForEach-Object {pip uninstall -y $_}`
+    -  `pip install -r requirements.txt`
 
 - Copy the env.template and fill your environment variables
      - `cp .env.template .env`
@@ -29,6 +31,10 @@
     -  the huggingfacehub_api_token
     -  the api_version
     -  the llm_provider
+
+- Finally run the app
+  - `cd src`
+  - `streamlit run GUI_with_Streamlit.py`
 
 - To use and deep dive with the notebook
 ```
